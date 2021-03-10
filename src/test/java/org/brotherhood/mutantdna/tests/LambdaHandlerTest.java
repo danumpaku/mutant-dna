@@ -46,7 +46,7 @@ public class LambdaHandlerTest {
 		lambdaContext = new MockLambdaContext();
 	}
 
-	@Parameters(name= "{index}: isMutant[{0}]={1}")
+	@Parameters
 	public static Stream<Arguments> mutantsData() {
 		return Stream.of(
 				arguments(new DnaRequest(new String[] {
@@ -173,7 +173,7 @@ public class LambdaHandlerTest {
 	}
 
 	@MethodSource("mutantsData")
-	@ParameterizedTest(name= "{index}: isMutant[{0}]={1}")
+	@ParameterizedTest(name= "{index}: isMutant({0})={1}")
 	public void mutantEndpointTest(DnaRequest dnaRequest, Status expectedStatus) throws IOException {
 
 		AwsProxyRequest request = new AwsProxyRequestBuilder("/mutant", HttpMethod.POST)
@@ -181,14 +181,17 @@ public class LambdaHandlerTest {
 				.body(dnaRequest)
 				.build();
 
-		System.out.println(dnaRequest);
 
 		AwsProxyResponse response = handler.handleRequest(request, lambdaContext);
 
+		System.out.println(dnaRequest);
+		System.out.println("Status Expected: " + expectedStatus.getStatusCode() + "; Returned: " + response.getStatusCode());
+		System.out.println();
+		
 		assertNotNull(response);
 		assertEquals(expectedStatus.getStatusCode(), response.getStatusCode());
-
 		assertFalse(response.isBase64Encoded());
+		
 	}
 
 	@Test
@@ -204,6 +207,9 @@ public class LambdaHandlerTest {
 		ObjectMapper mapper = new ObjectMapper();
 		Stats stats = mapper.readValue(response.getBody(), Stats.class);
 		System.out.println(stats);
+		System.out.println();
+
 		assertFalse(stats.getCountHumanDna() == 0 && stats.getCountMutantDna() == 0);
+		
 	}
 }

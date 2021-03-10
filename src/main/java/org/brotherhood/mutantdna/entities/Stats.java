@@ -25,8 +25,7 @@ public class Stats {
 
 	@JsonProperty("ratio")
 	public double getRatio() {
-		double total = countHumanDna + countMutantDna;
-		return countMutantDna/total;
+		return countMutantDna/countHumanDna;
 	}
 
 	@Override
