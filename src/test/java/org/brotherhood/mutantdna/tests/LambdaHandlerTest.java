@@ -46,7 +46,7 @@ public class LambdaHandlerTest {
 		lambdaContext = new MockLambdaContext();
 	}
 
-	@Parameters(name= "{index}: isMutant[{0}]={1}")
+	@Parameters
 	public static Stream<Arguments> mutantsData() {
 		return Stream.of(
 				arguments(new DnaRequest(new String[] {
@@ -65,6 +65,14 @@ public class LambdaHandlerTest {
 						"CGCCTA",
 						"TCACTG"
 				}), Status.FORBIDDEN),
+				arguments(new DnaRequest(new String[] {
+						"ATGCGA",
+						"CAGTGC",
+						"TTATGT",
+						"AGAACG",
+						"CGCCTA",
+						"TCACTG"
+				}), Status.FORBIDDEN),//duplicated, so it won't be stored at database
 				arguments(new DnaRequest(new String[] {
 						"CAGTGC",
 						"ATGCGA",
@@ -89,14 +97,6 @@ public class LambdaHandlerTest {
 						"TTATGT",
 						"TCACTG"
 				}), Status.FORBIDDEN),
-				arguments(new DnaRequest(new String[] {
-						"AAAACG",
-						"CAGTGC",
-						"TTATGT",
-						"AGAAGG",
-						"TACGCC",
-						"TCACTG"
-				}), Status.OK), //Mixed
 				arguments(new DnaRequest(new String[] {
 						"AAAACG",
 						"CAGTGC",
@@ -146,10 +146,10 @@ public class LambdaHandlerTest {
 						"AGAAGG"
 				}), Status.FORBIDDEN),	//Diagonal NE Upper
 				arguments(new DnaRequest(new String[] {
-						"TCACTC",
+						"TTACTC",
 						"TACTCT",
 						"ACCCTA",
-						"CACGCC",
+						"CACGAC",
 						"ATGCAC",
 						"AGAAGG"
 				}), Status.OK),	//Diagonal NE Upper
@@ -168,31 +168,67 @@ public class LambdaHandlerTest {
 						"CATGCA",
 						"ATGCAC",
 						"AGCACG"
-				}), Status.OK)	//Diagonal NE Lower
+				}), Status.OK),	//Diagonal NE Lower
+				arguments(new DnaRequest(new String[] {
+						"AAAACG",
+						"CAGTGC",
+						"TTATGT",
+						"AGAAGG",
+						"TACGCC",
+						"TCACTG"
+				}), Status.FORBIDDEN), //Rejected because overlapping
+				arguments(new DnaRequest(new String[] {
+						"AAAACG",
+						"CAGTGC",
+						"TTATGT",
+						"AGAAGG",
+						"TACGAC",
+						"TCACTG"
+				}), Status.OK), //Almost overlapping but mutant
+				arguments(new DnaRequest(new String[] {
+						"TCACTC",
+						"TACTCT",
+						"ACCCTA",
+						"CACGCC",
+						"ATGCAC",
+						"AGAAGG"
+				}), Status.OK),	//Double overlapping but mutant
+				arguments(new DnaRequest(new String[] {
+						"TGAGTG",
+						"TCCCCT",
+						"ACGCTA",
+						"GCCGGA",
+						"ACGCTG",
+						"AGAAGG"
+				}), Status.FORBIDDEN)	//Rejected because triple overlapping
 				);
 	}
 
 	@MethodSource("mutantsData")
-	@ParameterizedTest(name= "{index}: isMutant[{0}]={1}")
+	@ParameterizedTest(name= "{index}: isMutant({0})={1}")
 	public void mutantEndpointTest(DnaRequest dnaRequest, Status expectedStatus) throws IOException {
-
+		System.out.println("[TEST BEGINS]----------------------------------------------------------------------------------------------");
+		System.out.println(dnaRequest);
+		
 		AwsProxyRequest request = new AwsProxyRequestBuilder("/mutant", HttpMethod.POST)
 				.json()
 				.body(dnaRequest)
 				.build();
 
-		System.out.println(dnaRequest);
 
 		AwsProxyResponse response = handler.handleRequest(request, lambdaContext);
 
+		System.out.println("Status Expected: " + expectedStatus.getStatusCode() + "; Returned: " + response.getStatusCode());
+		
 		assertNotNull(response);
 		assertEquals(expectedStatus.getStatusCode(), response.getStatusCode());
-
-		assertFalse(response.isBase64Encoded());
+		assertFalse(response.isBase64Encoded());		
+		System.out.println("[TEST ENDS]------------------------------------------------------------------------------------------------");
 	}
 
 	@Test
 	public void statsEndpointTest() throws JsonMappingException, JsonProcessingException {
+		System.out.println("[TEST BEGINS]----------------------------------------------------------------------------------------------");
 		AwsProxyRequest request = new AwsProxyRequestBuilder("/stats", HttpMethod.GET)
 				.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
 				.build();
@@ -204,6 +240,9 @@ public class LambdaHandlerTest {
 		ObjectMapper mapper = new ObjectMapper();
 		Stats stats = mapper.readValue(response.getBody(), Stats.class);
 		System.out.println(stats);
-		assertFalse(stats.getCountHumanDna() == 0 && stats.getCountMutantDna() == 0);
+		System.out.println();
+
+		assertFalse(stats.getCountHumanDna() == 0 && stats.getCountMutantDna() == 0);	
+		System.out.println("[TEST ENDS]------------------------------------------------------------------------------------------------");
 	}
 }
