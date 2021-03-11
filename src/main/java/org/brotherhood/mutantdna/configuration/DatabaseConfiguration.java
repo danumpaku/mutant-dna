@@ -28,11 +28,11 @@ public class DatabaseConfiguration {
 
 	private DataSource awsSecretDataSource() {
 
-		String databaseSecretName = System.getenv("DATABASE_SECRET_NAME");
+		String databaseSecretName = System.getenv("DATABASE_SECRET");
 		if (databaseSecretName == null)
-			databaseSecretName = env.getProperty("default.databaseSecretName");
+			databaseSecretName = env.getProperty("default.databaseSecret");
 		
-		String databaseUrl = System.getenv("DATABASE_SECRET_NAME");
+		String databaseUrl = System.getenv("DATABASE_URL");
 		if (databaseUrl == null)
 			databaseUrl = env.getProperty("default.databaseUrl");
 		
