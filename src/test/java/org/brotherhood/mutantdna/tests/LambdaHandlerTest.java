@@ -94,14 +94,6 @@ public class LambdaHandlerTest {
 						"CAGTGC",
 						"TTATGT",
 						"AGAAGG",
-						"TACGCC",
-						"TCACTG"
-				}), Status.OK), //Mixed
-				arguments(new DnaRequest(new String[] {
-						"AAAACG",
-						"CAGTGC",
-						"TTATGT",
-						"AGAAGG",
 						"TACCCC",
 						"TCACTG"
 				}), Status.OK),	//Horizontal
@@ -146,10 +138,10 @@ public class LambdaHandlerTest {
 						"AGAAGG"
 				}), Status.FORBIDDEN),	//Diagonal NE Upper
 				arguments(new DnaRequest(new String[] {
-						"TCACTC",
+						"TTACTC",
 						"TACTCT",
 						"ACCCTA",
-						"CACGCC",
+						"CACGAC",
 						"ATGCAC",
 						"AGAAGG"
 				}), Status.OK),	//Diagonal NE Upper
@@ -168,7 +160,39 @@ public class LambdaHandlerTest {
 						"CATGCA",
 						"ATGCAC",
 						"AGCACG"
-				}), Status.OK)	//Diagonal NE Lower
+				}), Status.OK),	//Diagonal NE Lower
+				arguments(new DnaRequest(new String[] {
+						"AAAACG",
+						"CAGTGC",
+						"TTATGT",
+						"AGAAGG",
+						"TACGCC",
+						"TCACTG"
+				}), Status.FORBIDDEN), //Rejected because overlapping
+				arguments(new DnaRequest(new String[] {
+						"AAAACG",
+						"CAGTGC",
+						"TTATGT",
+						"AGAAGG",
+						"TACGAC",
+						"TCACTG"
+				}), Status.OK), //Almost overlapping but mutant
+				arguments(new DnaRequest(new String[] {
+						"TCACTC",
+						"TACTCT",
+						"ACCCTA",
+						"CACGCC",
+						"ATGCAC",
+						"AGAAGG"
+				}), Status.OK),	//Double overlapping but mutant
+				arguments(new DnaRequest(new String[] {
+						"TGAGTG",
+						"TCCCCT",
+						"ACGCTA",
+						"GCCGGA",
+						"ACGCTG",
+						"AGAAGG"
+				}), Status.FORBIDDEN)	//Rejected because triple overlapping
 				);
 	}
 
@@ -209,7 +233,6 @@ public class LambdaHandlerTest {
 		System.out.println(stats);
 		System.out.println();
 
-		assertFalse(stats.getCountHumanDna() == 0 && stats.getCountMutantDna() == 0);
-		
+		assertFalse(stats.getCountHumanDna() == 0 && stats.getCountMutantDna() == 0);	
 	}
 }

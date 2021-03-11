@@ -1,6 +1,16 @@
 package org.brotherhood.mutantdna.helpers;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.brotherhood.mutantdna.entities.MutantDnaSequence;
+import org.brotherhood.mutantdna.entities.Position;
+
 public class DnaHelper {
+
+	private static final int MUTANT_SEQUENCE_LENGTH = 4;
+	private static final int MUTANT_SEQUENCES_NEEDED = 2;
 
 	/*
 	 * Asuming that mutant-human ratio is low, the fastest way to detect mutant DNA chains is 
@@ -11,90 +21,87 @@ public class DnaHelper {
 	 * execution time, so the best way to detect mutants is checking the DNA in each direction. 
 	 */
 	public static boolean isMutant(String[] dna) {
-		int mutantChainsCounter = 0;
+		List<MutantDnaSequence> mutantSequences = new LinkedList<>();
 
-		mutantChainsCounter = countMutantChainsInDirection(dna, mutantChainsCounter, readHorizontally, 0, dna.length, horizontalOrVerticalLimit); 
-		if (mutantChainsCounter >= MUTANT_CHAINS_NEEDED)
+		findMutantDnaSequences(mutantSequences, dna, toHorizontal, 0, dna.length, horizontalOrVerticalLimit); 
+		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
 			return true;
 
-		mutantChainsCounter = countMutantChainsInDirection(dna, mutantChainsCounter, readVertically, 0, dna.length, horizontalOrVerticalLimit); 
-		if (mutantChainsCounter >= MUTANT_CHAINS_NEEDED)
+		findMutantDnaSequences(mutantSequences, dna, toVertical, 0, dna.length, horizontalOrVerticalLimit); 
+		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
 			return true;
 
 		//Each diagonal search is divided in two parts by the main diagonals to simplify code
-		
-		mutantChainsCounter = countMutantChainsInDirection(dna, mutantChainsCounter, readDiagonallySE_Upper, 0, dna.length - 3, diagonalLimit); 
-		if (mutantChainsCounter >= MUTANT_CHAINS_NEEDED)
-			return true;
-		
-		mutantChainsCounter = countMutantChainsInDirection(dna, mutantChainsCounter, readDiagonallySE_Lower, 1, dna.length - 3, diagonalLimit); 
-		if (mutantChainsCounter >= MUTANT_CHAINS_NEEDED)
+
+		findMutantDnaSequences(mutantSequences, dna, toDiagonalSE_Upper, 0, dna.length - 3, diagonalLimit); 
+		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
 			return true;
 
-		mutantChainsCounter = countMutantChainsInDirection(dna, mutantChainsCounter, readDiagonallyNE_Upper, 0, dna.length - 3, diagonalLimit); 
-		if (mutantChainsCounter >= MUTANT_CHAINS_NEEDED)
+		findMutantDnaSequences(mutantSequences, dna, toDiagonalSE_Lower, 1, dna.length - 3, diagonalLimit); 
+		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
 			return true;
-		
-		mutantChainsCounter = countMutantChainsInDirection(dna, mutantChainsCounter, readDiagonallyNE_Lower, 1, dna.length - 3, diagonalLimit); 
-		if (mutantChainsCounter >= MUTANT_CHAINS_NEEDED)
+
+		findMutantDnaSequences(mutantSequences, dna, toDiagonalNE_Upper, 0, dna.length - 3, diagonalLimit); 
+		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
 			return true;
-		
+
+		findMutantDnaSequences(mutantSequences, dna, toDiagonalNE_Lower, 1, dna.length - 3, diagonalLimit); 
+		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
+			return true;
+
 		return false;
 	}
-	
-	private static final int MUTANT_CHAIN_LENGTH = 4;
-	private static final int MUTANT_CHAINS_NEEDED = 2;
 
-	private final static ReaderDirectionModifier readHorizontally = (dna, lineIdx, charIdx) -> dna[lineIdx].charAt(charIdx);
-	private final static ReaderDirectionModifier readVertically = (dna, lineIdx, charIdx) -> dna[charIdx].charAt(lineIdx);
-	private final static ReaderDirectionModifier readDiagonallySE_Upper = (dna, lineIdx, charIdx) -> dna[charIdx].charAt(charIdx + lineIdx);
-	private final static ReaderDirectionModifier readDiagonallySE_Lower = (dna, lineIdx, charIdx) -> dna[charIdx + lineIdx].charAt(charIdx);
-	private final static ReaderDirectionModifier readDiagonallyNE_Upper = (dna, lineIdx, charIdx) -> dna[dna.length - lineIdx - charIdx -1].charAt(charIdx);
-	private final static ReaderDirectionModifier readDiagonallyNE_Lower = (dna, lineIdx, charIdx) -> dna[dna.length - charIdx -1].charAt(charIdx + lineIdx);
-	
-	private final static CharIndexLimiter horizontalOrVerticalLimit = (lineIdx, charIdx, dnaWidth, chainLength) -> (charIdx < dnaWidth) && (charIdx < dnaWidth - 3 + chainLength);
-	private final static CharIndexLimiter diagonalLimit = (lineIdx, charIdx, dnaWidth, chainLength) -> (charIdx < dnaWidth - lineIdx) && (charIdx < dnaWidth - lineIdx - 3 + chainLength);
-	
 	/**
-	 * Declares Lambda expressions that maps 2 counters (lineIndex and charIndex) to a DNA matrix position
+	 * Declares Lambda expressions that maps 2 counters (lineIndex and charIndex) to a DNA matrix position with size n x n
 	 * thus changing the direction in which each line travels across the matrix
 	 */
-	private static interface ReaderDirectionModifier {
-		char getChar(String[] dna, int lineIndex, int charIndex);
+	private static interface PositionMapper {
+		Position map(int lineIndex, int charIndex, int n);
 	}
 
+	private final static PositionMapper toHorizontal = (lineIdx, charIdx, n) -> new Position(lineIdx, charIdx);
+	private final static PositionMapper toVertical = (lineIdx, charIdx, n) -> new Position(charIdx, lineIdx);
+	private final static PositionMapper toDiagonalSE_Upper = (lineIdx, charIdx, n) -> new Position(charIdx, charIdx + lineIdx);
+	private final static PositionMapper toDiagonalSE_Lower = (lineIdx, charIdx, n) -> new Position(charIdx + lineIdx, charIdx);
+	private final static PositionMapper toDiagonalNE_Upper = (lineIdx, charIdx, n) -> new Position(n - lineIdx - charIdx - 1, charIdx);
+	private final static PositionMapper toDiagonalNE_Lower = (lineIdx, charIdx, n) -> new Position(n - charIdx - 1, charIdx + lineIdx);
+
 	/**
-	 * Declares Lambda expressions used to limit the lines defined using ReaderDirectionModifier
-	 * to restrict them to be inside the DNA matrix.
+	 * Declares Lambda expressions used to limit the lines defined using PositionMapper
+	 * to restrict them to be inside the DNA matrix of size n x n.
 	 */
 	private static interface CharIndexLimiter{
-		boolean check(int lineIndex, int charIndex, int dnaWidth, int currentChainLength);
+		boolean check(int lineIndex, int charIndex, int n, int currentChainLength);
 	}
-	
+
+	private final static CharIndexLimiter horizontalOrVerticalLimit = (lineIdx, charIdx, n, chainLength) -> (charIdx < n) && (charIdx < n - 3 + chainLength);
+	private final static CharIndexLimiter diagonalLimit = (lineIdx, charIdx, n, chainLength) -> (charIdx < n - lineIdx) && (charIdx < n - lineIdx - 3 + chainLength);
+
 	/**
-	 * Reads the DNA matrix splitting it in lines going in the direction defined by the ReaderDirectionModifier 
-	 * and limited by CharIndexLimiter, counting the amount of mutant DNA chains and stopping as soon 
+	 * Reads the DNA matrix splitting it in lines going in the direction defined by the PositionMapper 
+	 * and limited by CharIndexLimiter, finding the mutant DNA sequences and stopping as soon 
 	 * as it finds MUTANT_CHAINS_NEEDED chains of MUTANT_CHAIN_LENGTH characters.
-	 * @param dna
-	 * @param mutantChainsCounter
-	 * @param reader
-	 * @param lineIdxBegin
-	 * @param lineIdxLimit
-	 * @param charIdxLimiter
+	 * @param mutantSequences List containing the mutant DNA sequences found so far. This method will add the new findings to this list
+	 * @param dna Contains the dna matrix
+	 * @param positionMapper This mapper defines the direction in which the lines that visit the dna matrix, are oriented 
+	 * @param lineIdxBegin Beginning of the lineIdx counter 
+	 * @param lineIdxLimit Limit of the lineIdx counter
+	 * @param charIdxLimiter Dynamic limit of the charIdx counter. charIdx always starts at 0. 
 	 * @return
 	 */
-	private static int countMutantChainsInDirection(String[] dna, int mutantChainsCounter, ReaderDirectionModifier reader, int lineIdxBegin, int lineIdxLimit, CharIndexLimiter charIdxLimiter) {
+	private static void findMutantDnaSequences(List<MutantDnaSequence> mutantSequences, String[] dna, PositionMapper positionMapper, int lineIdxBegin, int lineIdxLimit, CharIndexLimiter charIdxLimiter) {
 
-		int dnaWidth=dna.length;
+		int n = dna.length;
 		int chainLength;
 		char lastChar;
 		char currentChar;
 
-		for (int lineIdx = lineIdxBegin; lineIdx < lineIdxLimit && mutantChainsCounter < MUTANT_CHAINS_NEEDED; lineIdx++) {
-			lastChar = reader.getChar(dna, lineIdx, 0);
+		for (int lineIdx = lineIdxBegin; lineIdx < lineIdxLimit && mutantSequences.size() < MUTANT_SEQUENCES_NEEDED; lineIdx++) {
+			lastChar = getCharAt(dna, positionMapper.map(lineIdx, 0, n));
 			chainLength = 1;
-			for (int charIdx = 1; charIdxLimiter.check(lineIdx, charIdx, dnaWidth, chainLength) && mutantChainsCounter < MUTANT_CHAINS_NEEDED; charIdx++) {
-				currentChar = reader.getChar(dna, lineIdx, charIdx);
+			for (int charIdx = 1; charIdxLimiter.check(lineIdx, charIdx, n, chainLength) && mutantSequences.size() < MUTANT_SEQUENCES_NEEDED; charIdx++) {
+				currentChar = getCharAt(dna, positionMapper.map(lineIdx, charIdx, n));
 				if (lastChar == currentChar) {
 					chainLength++;
 				}
@@ -102,13 +109,41 @@ public class DnaHelper {
 					lastChar = currentChar;
 					chainLength = 1;
 				}
-				if (chainLength == MUTANT_CHAIN_LENGTH) {
-					mutantChainsCounter ++;
+				if (chainLength == MUTANT_SEQUENCE_LENGTH) {
+					
+					MutantDnaSequence newSequence = createSequence(currentChar, n, lineIdx, charIdx - MUTANT_SEQUENCE_LENGTH + 1, charIdx, positionMapper);
+					if (! isCollidingWithOtherSequence(newSequence, mutantSequences))
+						mutantSequences.add(newSequence);
+					else
+						System.out.println("Collided!!");
+					
 					chainLength = 0;
 				}
 			}
 		}
+	}
+	
+	private static MutantDnaSequence createSequence(char dnaChar, int n, int lineIdx, int charIdxBegin, int charIdxEnd, PositionMapper positionMapper) {
+		List<Position> positions = new ArrayList<Position>(MUTANT_SEQUENCE_LENGTH);					
+		
+		for (int i=charIdxBegin; i<=charIdxEnd; i++)
+			positions.add(positionMapper.map(lineIdx, i, n));
+		System.out.println();
+		for(Position pos : positions)
+			System.out.println("(" + pos.getCol() + "," + pos.getRow() + ")");
+		
+		return new MutantDnaSequence(dnaChar, positions);
+	}
 
-		return mutantChainsCounter;
+	private static char getCharAt(String[] dna, Position pos) {
+		return dna[pos.getRow()].charAt(pos.getCol());
+	}
+	
+	private static boolean isCollidingWithOtherSequence(MutantDnaSequence newSequence, List<MutantDnaSequence> mutantSequences) {
+		for(MutantDnaSequence sequence : mutantSequences) {
+			if (sequence.collidesWith(newSequence))
+				return true;
+		}
+		return false;
 	}
 }

@@ -17,6 +17,6 @@ public class DnaRequest {
 	@Override
 	public String toString() {
 		
-		return "dna={\"" + String.join("\", \"", dna) + "\"}";
+		return "dna={\n" + String.join("\n", dna) + "\n}";
 	}
 }
