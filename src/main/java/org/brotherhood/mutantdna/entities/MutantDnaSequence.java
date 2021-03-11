@@ -14,14 +14,12 @@ public class MutantDnaSequence {
 	@Getter
 	private List<Position> dnaPositions;
 	
-	public boolean collidesWith(MutantDnaSequence other) {
-		if (dnaBase != other.dnaBase)
+	public boolean overlapsWith(MutantDnaSequence other) {
+		if (dnaBase != other.getDnaBase())
 			return false;
 		for (Position position : dnaPositions)
-			if (other.getDnaPositions().contains(position)) {
-				System.out.println("Collided!!" + "(" + position.getCol() + "," + position.getRow() + ")");
+			if (other.getDnaPositions().contains(position))
 				return true;
-			}
 		return false;
 	}
 }

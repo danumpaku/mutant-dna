@@ -1,16 +1,15 @@
 package org.brotherhood.mutantdna.helpers;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
+import org.brotherhood.mutantdna.entities.MutantDetector;
 import org.brotherhood.mutantdna.entities.MutantDnaSequence;
 import org.brotherhood.mutantdna.entities.Position;
 
 public class DnaHelper {
 
 	private static final int MUTANT_SEQUENCE_LENGTH = 4;
-	private static final int MUTANT_SEQUENCES_NEEDED = 2;
 
 	/*
 	 * Asuming that mutant-human ratio is low, the fastest way to detect mutant DNA chains is 
@@ -21,32 +20,33 @@ public class DnaHelper {
 	 * execution time, so the best way to detect mutants is checking the DNA in each direction. 
 	 */
 	public static boolean isMutant(String[] dna) {
-		List<MutantDnaSequence> mutantSequences = new LinkedList<>();
+		
+		MutantDetector detector = new MutantDetector();
 
-		findMutantDnaSequences(mutantSequences, dna, toHorizontal, 0, dna.length, horizontalOrVerticalLimit); 
-		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
+		findMutantDnaSequences(detector, dna, toHorizontal, 0, dna.length, horizontalOrVerticalLimit); 
+		if (detector.isMutantDetected())
 			return true;
 
-		findMutantDnaSequences(mutantSequences, dna, toVertical, 0, dna.length, horizontalOrVerticalLimit); 
-		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
+		findMutantDnaSequences(detector, dna, toVertical, 0, dna.length, horizontalOrVerticalLimit); 
+		if (detector.isMutantDetected())
 			return true;
 
 		//Each diagonal search is divided in two parts by the main diagonals to simplify code
 
-		findMutantDnaSequences(mutantSequences, dna, toDiagonalSE_Upper, 0, dna.length - 3, diagonalLimit); 
-		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
+		findMutantDnaSequences(detector, dna, toDiagonalSE_Upper, 0, dna.length - 3, diagonalLimit); 
+		if (detector.isMutantDetected())
 			return true;
 
-		findMutantDnaSequences(mutantSequences, dna, toDiagonalSE_Lower, 1, dna.length - 3, diagonalLimit); 
-		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
+		findMutantDnaSequences(detector, dna, toDiagonalSE_Lower, 1, dna.length - 3, diagonalLimit); 
+		if (detector.isMutantDetected())
 			return true;
 
-		findMutantDnaSequences(mutantSequences, dna, toDiagonalNE_Upper, 0, dna.length - 3, diagonalLimit); 
-		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
+		findMutantDnaSequences(detector, dna, toDiagonalNE_Upper, 0, dna.length - 3, diagonalLimit); 
+		if (detector.isMutantDetected())
 			return true;
 
-		findMutantDnaSequences(mutantSequences, dna, toDiagonalNE_Lower, 1, dna.length - 3, diagonalLimit); 
-		if (mutantSequences.size() >= MUTANT_SEQUENCES_NEEDED)
+		findMutantDnaSequences(detector, dna, toDiagonalNE_Lower, 1, dna.length - 3, diagonalLimit); 
+		if (detector.isMutantDetected())
 			return true;
 
 		return false;
@@ -81,8 +81,8 @@ public class DnaHelper {
 	/**
 	 * Reads the DNA matrix splitting it in lines going in the direction defined by the PositionMapper 
 	 * and limited by CharIndexLimiter, finding the mutant DNA sequences and stopping as soon 
-	 * as it finds MUTANT_CHAINS_NEEDED chains of MUTANT_CHAIN_LENGTH characters.
-	 * @param mutantSequences List containing the mutant DNA sequences found so far. This method will add the new findings to this list
+	 * as the detector informs it detected a mutant.
+	 * @param detector mutant detector object. collects DNA sequences and analyzes if they imply a mutant was detected
 	 * @param dna Contains the dna matrix
 	 * @param positionMapper This mapper defines the direction in which the lines that visit the dna matrix, are oriented 
 	 * @param lineIdxBegin Beginning of the lineIdx counter 
@@ -90,17 +90,17 @@ public class DnaHelper {
 	 * @param charIdxLimiter Dynamic limit of the charIdx counter. charIdx always starts at 0. 
 	 * @return
 	 */
-	private static void findMutantDnaSequences(List<MutantDnaSequence> mutantSequences, String[] dna, PositionMapper positionMapper, int lineIdxBegin, int lineIdxLimit, CharIndexLimiter charIdxLimiter) {
+	private static void findMutantDnaSequences(MutantDetector detector, String[] dna, PositionMapper positionMapper, int lineIdxBegin, int lineIdxLimit, CharIndexLimiter charIdxLimiter) {
 
 		int n = dna.length;
 		int chainLength;
 		char lastChar;
 		char currentChar;
 
-		for (int lineIdx = lineIdxBegin; lineIdx < lineIdxLimit && mutantSequences.size() < MUTANT_SEQUENCES_NEEDED; lineIdx++) {
+		for (int lineIdx = lineIdxBegin; lineIdx < lineIdxLimit && !detector.isMutantDetected(); lineIdx++) {
 			lastChar = getCharAt(dna, positionMapper.map(lineIdx, 0, n));
 			chainLength = 1;
-			for (int charIdx = 1; charIdxLimiter.check(lineIdx, charIdx, n, chainLength) && mutantSequences.size() < MUTANT_SEQUENCES_NEEDED; charIdx++) {
+			for (int charIdx = 1; charIdxLimiter.check(lineIdx, charIdx, n, chainLength) && !detector.isMutantDetected(); charIdx++) {
 				currentChar = getCharAt(dna, positionMapper.map(lineIdx, charIdx, n));
 				if (lastChar == currentChar) {
 					chainLength++;
@@ -112,12 +112,8 @@ public class DnaHelper {
 				if (chainLength == MUTANT_SEQUENCE_LENGTH) {
 					
 					MutantDnaSequence newSequence = createSequence(currentChar, n, lineIdx, charIdx - MUTANT_SEQUENCE_LENGTH + 1, charIdx, positionMapper);
-					if (! isCollidingWithOtherSequence(newSequence, mutantSequences))
-						mutantSequences.add(newSequence);
-					else
-						System.out.println("Collided!!");
-					
-					chainLength = 0;
+					detector.addDnaSequence(newSequence);
+					chainLength--; //allows the creation of an extra sequence if an extra equal character is found. Ex: AAAAA will generate [AAAA]A and A[AAAA]
 				}
 			}
 		}
@@ -128,22 +124,11 @@ public class DnaHelper {
 		
 		for (int i=charIdxBegin; i<=charIdxEnd; i++)
 			positions.add(positionMapper.map(lineIdx, i, n));
-		System.out.println();
-		for(Position pos : positions)
-			System.out.println("(" + pos.getCol() + "," + pos.getRow() + ")");
-		
+	
 		return new MutantDnaSequence(dnaChar, positions);
 	}
 
 	private static char getCharAt(String[] dna, Position pos) {
 		return dna[pos.getRow()].charAt(pos.getCol());
-	}
-	
-	private static boolean isCollidingWithOtherSequence(MutantDnaSequence newSequence, List<MutantDnaSequence> mutantSequences) {
-		for(MutantDnaSequence sequence : mutantSequences) {
-			if (sequence.collidesWith(newSequence))
-				return true;
-		}
-		return false;
 	}
 }

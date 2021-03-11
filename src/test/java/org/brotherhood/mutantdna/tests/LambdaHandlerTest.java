@@ -66,6 +66,14 @@ public class LambdaHandlerTest {
 						"TCACTG"
 				}), Status.FORBIDDEN),
 				arguments(new DnaRequest(new String[] {
+						"ATGCGA",
+						"CAGTGC",
+						"TTATGT",
+						"AGAACG",
+						"CGCCTA",
+						"TCACTG"
+				}), Status.FORBIDDEN),//duplicated, so it won't be stored at database
+				arguments(new DnaRequest(new String[] {
 						"CAGTGC",
 						"ATGCGA",
 						"AGAACG",
@@ -199,7 +207,9 @@ public class LambdaHandlerTest {
 	@MethodSource("mutantsData")
 	@ParameterizedTest(name= "{index}: isMutant({0})={1}")
 	public void mutantEndpointTest(DnaRequest dnaRequest, Status expectedStatus) throws IOException {
-
+		System.out.println("[TEST BEGINS]----------------------------------------------------------------------------------------------");
+		System.out.println(dnaRequest);
+		
 		AwsProxyRequest request = new AwsProxyRequestBuilder("/mutant", HttpMethod.POST)
 				.json()
 				.body(dnaRequest)
@@ -208,18 +218,17 @@ public class LambdaHandlerTest {
 
 		AwsProxyResponse response = handler.handleRequest(request, lambdaContext);
 
-		System.out.println(dnaRequest);
 		System.out.println("Status Expected: " + expectedStatus.getStatusCode() + "; Returned: " + response.getStatusCode());
-		System.out.println();
 		
 		assertNotNull(response);
 		assertEquals(expectedStatus.getStatusCode(), response.getStatusCode());
-		assertFalse(response.isBase64Encoded());
-		
+		assertFalse(response.isBase64Encoded());		
+		System.out.println("[TEST ENDS]------------------------------------------------------------------------------------------------");
 	}
 
 	@Test
 	public void statsEndpointTest() throws JsonMappingException, JsonProcessingException {
+		System.out.println("[TEST BEGINS]----------------------------------------------------------------------------------------------");
 		AwsProxyRequest request = new AwsProxyRequestBuilder("/stats", HttpMethod.GET)
 				.header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
 				.build();
@@ -234,5 +243,6 @@ public class LambdaHandlerTest {
 		System.out.println();
 
 		assertFalse(stats.getCountHumanDna() == 0 && stats.getCountMutantDna() == 0);	
+		System.out.println("[TEST ENDS]------------------------------------------------------------------------------------------------");
 	}
 }

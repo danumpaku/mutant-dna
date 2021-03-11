@@ -29,7 +29,6 @@ public class DatabaseConfiguration {
 	private DataSource awsSecretDataSource() {
 
 		String databaseSecretName = System.getenv("DATABASE_SECRET_NAME");
-		System.out.println("Reading Secret " + databaseSecretName);
 		AwsSecretManagerClient secretManager = new AwsSecretManagerClient();
 		DbConnectionInfo dbInfo = secretManager.getSecretAs(databaseSecretName, DbConnectionInfo.class);
 

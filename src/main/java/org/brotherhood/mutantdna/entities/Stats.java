@@ -32,6 +32,4 @@ public class Stats {
 	public String toString() {
 		return "Stats [countMutantDna=" + countMutantDna + ", countHumanDna=" + countHumanDna + ", ratio=" + getRatio() + "]";
 	}
-	
-	
 }
