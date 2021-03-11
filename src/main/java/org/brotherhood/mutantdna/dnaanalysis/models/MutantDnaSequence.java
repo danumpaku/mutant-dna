@@ -1,4 +1,4 @@
-package org.brotherhood.mutantdna.entities;
+package org.brotherhood.mutantdna.dnaanalysis.models;
 
 import java.util.List;
 

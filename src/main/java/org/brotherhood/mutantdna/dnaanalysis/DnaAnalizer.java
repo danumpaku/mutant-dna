@@ -1,15 +1,19 @@
-package org.brotherhood.mutantdna.helpers;
+package org.brotherhood.mutantdna.dnaanalysis;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.brotherhood.mutantdna.entities.MutantDetector;
-import org.brotherhood.mutantdna.entities.MutantDnaSequence;
-import org.brotherhood.mutantdna.entities.Position;
+import org.brotherhood.mutantdna.dnaanalysis.models.MutantDetector;
+import org.brotherhood.mutantdna.dnaanalysis.models.MutantDnaSequence;
+import org.brotherhood.mutantdna.dnaanalysis.models.Position;
 
-public class DnaHelper {
+public class DnaAnalizer {
 
-	private static final int MUTANT_SEQUENCE_LENGTH = 4;
+	private int mutantSequenceLength;
+	
+	public DnaAnalizer(int mutantSequenceLength) {
+		this.mutantSequenceLength = mutantSequenceLength;
+	}
 
 	/*
 	 * Asuming that mutant-human ratio is low, the fastest way to detect mutant DNA chains is 
@@ -19,7 +23,7 @@ public class DnaHelper {
 	 * DNA chain is much lower and it can be visited multiple times to detect it which implies more 
 	 * execution time, so the best way to detect mutants is checking the DNA in each direction. 
 	 */
-	public static boolean isMutant(String[] dna) {
+	public boolean isMutant(String[] dna) {
 		
 		MutantDetector detector = new MutantDetector();
 
@@ -90,7 +94,7 @@ public class DnaHelper {
 	 * @param charIdxLimiter Dynamic limit of the charIdx counter. charIdx always starts at 0. 
 	 * @return
 	 */
-	private static void findMutantDnaSequences(MutantDetector detector, String[] dna, PositionMapper positionMapper, int lineIdxBegin, int lineIdxLimit, CharIndexLimiter charIdxLimiter) {
+	private void findMutantDnaSequences(MutantDetector detector, String[] dna, PositionMapper positionMapper, int lineIdxBegin, int lineIdxLimit, CharIndexLimiter charIdxLimiter) {
 
 		int n = dna.length;
 		int chainLength;
@@ -109,9 +113,9 @@ public class DnaHelper {
 					lastChar = currentChar;
 					chainLength = 1;
 				}
-				if (chainLength == MUTANT_SEQUENCE_LENGTH) {
+				if (chainLength == mutantSequenceLength) {
 					
-					MutantDnaSequence newSequence = createSequence(currentChar, n, lineIdx, charIdx - MUTANT_SEQUENCE_LENGTH + 1, charIdx, positionMapper);
+					MutantDnaSequence newSequence = createSequence(currentChar, n, lineIdx, charIdx - mutantSequenceLength + 1, charIdx, positionMapper);
 					detector.addDnaSequence(newSequence);
 					chainLength--; //allows the creation of an extra sequence if an extra equal character is found. Ex: AAAAA will generate [AAAA]A and A[AAAA]
 				}
@@ -119,8 +123,8 @@ public class DnaHelper {
 		}
 	}
 	
-	private static MutantDnaSequence createSequence(char dnaChar, int n, int lineIdx, int charIdxBegin, int charIdxEnd, PositionMapper positionMapper) {
-		List<Position> positions = new ArrayList<Position>(MUTANT_SEQUENCE_LENGTH);					
+	private MutantDnaSequence createSequence(char dnaChar, int n, int lineIdx, int charIdxBegin, int charIdxEnd, PositionMapper positionMapper) {
+		List<Position> positions = new ArrayList<Position>(mutantSequenceLength);					
 		
 		for (int i=charIdxBegin; i<=charIdxEnd; i++)
 			positions.add(positionMapper.map(lineIdx, i, n));

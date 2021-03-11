@@ -1,4 +1,4 @@
-package org.brotherhood.mutantdna.entities;
+package org.brotherhood.mutantdna.dnaanalysis.models;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
