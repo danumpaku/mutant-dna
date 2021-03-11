@@ -31,17 +31,13 @@ public class DatabaseConfiguration {
 		String databaseSecretName = System.getenv("DATABASE_SECRET");
 		if (databaseSecretName == null)
 			databaseSecretName = env.getProperty("default.databaseSecret");
-		
-		String databaseUrl = System.getenv("DATABASE_URL");
-		if (databaseUrl == null)
-			databaseUrl = env.getProperty("default.databaseUrl");
-		
+
 		AwsSecretManagerClient secretManager = new AwsSecretManagerClient();
 		DbConnectionInfo dbInfo = secretManager.getSecretAs(databaseSecretName, DbConnectionInfo.class);
 
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
 		dataSource.setDriverClassName(env.getProperty("jdbc.driverClassName"));
-		dataSource.setUrl(databaseUrl);
+		dataSource.setUrl("jdbc:postgresql://" + dbInfo.getHost() + ":" + dbInfo.getPort() + "/" + dbInfo.getDbname());
 		dataSource.setUsername(dbInfo.getUsername());
 		dataSource.setPassword(dbInfo.getPassword());
 

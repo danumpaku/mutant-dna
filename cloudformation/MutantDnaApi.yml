@@ -53,7 +53,6 @@ Resources:
         Timeout: 30
         MemorySize: 512
         DatabaseSecret: !GetAtt DatabaseStack.Outputs.DatabaseAdminSecretArn
-        DatabaseUrl: !Join ['', ['jdbc:postgresql://', !GetAtt DatabaseStack.Outputs.RDSClusterEndpointAddress, ':' , !GetAtt DatabaseStack.Outputs.RDSClusterEndpointPort, '/postgres']]
         
   ApiGatewayStack:
     Type: AWS::CloudFormation::Stack
