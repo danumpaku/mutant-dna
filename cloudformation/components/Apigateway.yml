@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Api gateway for a service hosted on a lambda function, contains all of its resources methods and configurations
+Parameters:
+  Stage:
+    Type: String
+  ApiName:
+    Type: String
+  EndpointConfigurationType:
+    Type: String
+  LambdaApiArn:
+    Type: String
+Resources:
+  ApiGateway:
+    Type: "AWS::ApiGateway::RestApi"
+    Properties:
+      Name: !Ref ApiName
+      EndpointConfiguration:
+        Types:
+          - !Ref EndpointConfigurationType
+  RootAnyMethod:
+    Type: 'AWS::ApiGateway::Method'
+    DependsOn:
+      - ApiGateway
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !GetAtt ApiGateway.RootResourceId
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaApiArn}/invocations
+  ProxyResource:
+    Type: 'AWS::ApiGateway::Resource'
+    DependsOn:
+      - RootAnyMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: '{proxy+}'
+  ProxyAnyMethod:
+    Type: 'AWS::ApiGateway::Method'
+    DependsOn:
+      - ProxyResource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ProxyResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub >-
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaApiArn}/invocations
+  ApiGatewayDeploy:
+    Type: "AWS::ApiGateway::Deployment"
+    DependsOn:
+      - ProxyAnyMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref Stage
+  ProxyAnyMethodLambdaPermission:
+    Type: "AWS::Lambda::Permission"
+    DependsOn:
+      - ApiGatewayDeploy
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref LambdaApiArn
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
+  ProxyRootAnyMethodLambdaPermission:
+    Type: "AWS::Lambda::Permission"
+    DependsOn:
+      - ApiGatewayDeploy
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref LambdaApiArn
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/"
+Outputs:
+  InvokeURL:
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
