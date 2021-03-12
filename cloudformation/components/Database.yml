@@ -29,7 +29,7 @@ Parameters:
     
 Resources:
 
-  DatabaseSecret:
+  DatabaseAdminSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       Description: !Ref AdminSecretName
@@ -49,8 +49,8 @@ Resources:
     Type: 'AWS::RDS::DBCluster'
     Properties:
       DatabaseName: !Ref DBName
-      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !GetAtt DatabaseAdminSecret, ':SecretString:username}}' ]]
-      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !GetAtt DatabaseAdminSecret, ':SecretString:password}}' ]]
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabaseAdminSecret, ':SecretString:username}}' ]]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabaseAdminSecret, ':SecretString:password}}' ]]
       DBClusterIdentifier: !Ref DBClusterName
       Engine: !Ref Engine
       EngineVersion: !Ref EngineVersion
@@ -68,13 +68,13 @@ Resources:
       - DatabaseAdminSecret
     Type: AWS::SecretsManager::SecretTargetAttachment
     Properties:
-      SecretId: !GetAtt DatabaseAdminSecret
+      SecretId: !Ref DatabaseAdminSecret
       TargetId: !Ref RDSCluster
       TargetType: 'AWS::RDS::DBCluster'
         
 Outputs:
   DatabaseAdminSecretArn:
-    Value: !GetAtt DatabaseAdminSecret
+    Value: !Ref DatabaseAdminSecret
   RDSClusterId:
     Value: !Ref RDSCluster
   RDSClusterArn:

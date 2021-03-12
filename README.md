@@ -9,13 +9,16 @@ boolean isMutant(String[] dna); // Ejemplo Java
 
 En donde recibirás como parámetro un array de Strings que representan cada fila de una tabla de (NxN) con la secuencia del ADN. Las letras de los Strings solo pueden ser: (A,T,C,G), las cuales representa cada base nitrogenada del ADN.
 
+Ejemplo No Mutante
+
 A T G C G A
 C A G T G C
 T T A T T T
 A G A C G G
 G C G T C A
 T C A C T G
-Ejemplo No Mutante
+
+Ejemplo Mutante
 
 A T G C G A
 C A G T G C
@@ -23,7 +26,6 @@ T T A T G T
 A G A A G G
 C C C C T A
 T C A C T G
-Ejemplo Mutante
 
 Sabrás si un humano es mutante, si encuentras más de una secuencia de cuatro letras iguales, de forma oblicua, horizontal o vertical.
 Ejemplo (Caso mutante):
@@ -50,9 +52,9 @@ Exponer un servicio extra “/stats” que devuelva un Json con las estadística
 Tener en cuenta que la API puede recibir fluctuaciones agresivas de tráfico (Entre 100 y 1 millón de peticiones por segundo).
 Test-Automáticos, Code coverage > 80%.
 Entregar:
-● Código Fuente (Para Nivel 2 y 3: En repositorio github).
-● Instrucciones de cómo ejecutar el programa o la API. (Para Nivel 2 y 3: En README de github).
-● URL de la API (Nivel 2 y 3).
+- Código Fuente (Para Nivel 2 y 3: En repositorio github).
+- Instrucciones de cómo ejecutar el programa o la API. (Para Nivel 2 y 3: En README de github).
+- URL de la API (Nivel 2 y 3).
 
 # Solución
 
@@ -74,9 +76,10 @@ Si desea desplegar la API en su cuenta de AWS siga los siguientes pasos:
 - Suba al bucket la carpeta "cloudformation" que encontrará en el proyecto.
 - Cree en el bucket una carpeta al mismo nivel que la carpeta "cloudformation" y llamela "artifacts"
 - Suba a la carpeta artifacts el archivo "Mutant-Dna-1.0-SNAPSHOT-lambda-package.zip"
-- Entre a la carpeta cloudformation y copie la URL del archivo "MutantDnaApi.yml"
-- Vaya a la consola de cloudformation y presione el botón crear stack
+- Entre a la carpeta "cloudformation" y copie la URL del archivo "MutantDnaApi.yml"
+- Vaya a la consola de cloud formation y presione el botón crear stack
 - Indique que ya tiene una plantilla y que la va a leer de S3, y pegue la URL del archivo "MutantDnaApi.yml"
+- La plantilla le solicitará el nombre de la API el cual puede ser "MutantDnaApi"; y el nombre del bucket de S3, el cual seria "MutantDnaApi-DanielNumpaque"
 - Complete el proceso de creación del stack
 - Una vez AWS complete la creación del stack, vaya a la consola de Secret Manager
 - Busque el secreto "MutantDnaDatabaseConnectionSecret" y copie su ARN
