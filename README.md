@@ -91,3 +91,7 @@ Si desea desplegar la API en su cuenta de AWS siga los siguientes pasos:
 # Ejecutar la API desplegada
 Una vez ha desplegado la API puede ir a la consola de ApiGateway, buscar la API "MutantDnaApi" y obtener la URL base para realizar las peticiones que desee.
 
+# Aclaracion
+En este momento el script de cloud formation no crea las VPC, subredes y grupos de seguridad necesarios para conectar la RDS con la funcion lambda, cosas que se hicieron a mano para la entrega. para probar la API utilice:
+Endpoint Mutants: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/mutants
+Enpoint Stats: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/stats
