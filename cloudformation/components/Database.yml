@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Database cluster and all the configuration necessary
+Parameters:
+  BucketS3Name:
+    Type: String
+  DBClusterName:
+    Type: String
+  DBName:
+    Type: String
+  Engine:
+    Type: String
+  EngineMode:
+    Type: String
+  EngineVersion:
+    Type: String
+  Min:
+    Type: Number
+  Max:
+    Type: Number
+  EnableHttpEndpoint:
+    Type: String
+  DeletionProtection:
+    Type: String
+  AdminSecretName:
+    Type: String
+  UsernameAdmin:
+    Type: String
+    
+Resources:
+
+  DatabaseAdminSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: !Ref AdminSecretName
+      Name: !Ref AdminSecretName
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{"username": "${UsernameAdmin}"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\''$'
+      Tags:
+        - Key: 'SecretName'
+          Value: !Ref AdminSecretName
+
+  RDSCluster:
+    DependsOn:
+      - DatabaseAdminSecret
+    Type: 'AWS::RDS::DBCluster'
+    Properties:
+      DatabaseName: !Ref DBName
+      MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabaseAdminSecret, ':SecretString:username}}' ]]
+      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref DatabaseAdminSecret, ':SecretString:password}}' ]]
+      DBClusterIdentifier: !Ref DBClusterName
+      Engine: !Ref Engine
+      EngineVersion: !Ref EngineVersion
+      EngineMode: !Ref EngineMode
+      EnableHttpEndpoint: !Ref EnableHttpEndpoint
+      ScalingConfiguration:
+        AutoPause: False
+        MinCapacity: !Ref Min
+        MaxCapacity: !Ref Max
+      DeletionProtection: !Ref DeletionProtection
+
+  SecretAttachment:
+    DependsOn:
+      - RDSCluster
+      - DatabaseAdminSecret
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref DatabaseAdminSecret
+      TargetId: !Ref RDSCluster
+      TargetType: 'AWS::RDS::DBCluster'
+        
+Outputs:
+  DatabaseAdminSecretArn:
+    Value: !Ref DatabaseAdminSecret
+  RDSClusterId:
+    Value: !Ref RDSCluster
+  RDSClusterArn:
+    Value: !Sub 'arn:aws:rds:${AWS::Region}:${AWS::AccountId}:cluster:${RDSCluster}'
+  RDSClusterEndpointAddress:
+    Value: !GetAtt RDSCluster.Endpoint.Address
+  RDSClusterEndpointPort:
+    Value: !GetAtt RDSCluster.Endpoint.Port

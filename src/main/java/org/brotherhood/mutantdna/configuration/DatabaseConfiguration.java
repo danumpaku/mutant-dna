@@ -28,12 +28,15 @@ public class DatabaseConfiguration {
 
 	private DataSource awsSecretDataSource() {
 
-		String databaseSecretName = System.getenv("DATABASE_SECRET_NAME");
+		String databaseSecretName = System.getenv("DATABASE_SECRET");
+		if (databaseSecretName == null)
+			databaseSecretName = env.getProperty("default.databaseSecret");
+
 		AwsSecretManagerClient secretManager = new AwsSecretManagerClient();
 		DbConnectionInfo dbInfo = secretManager.getSecretAs(databaseSecretName, DbConnectionInfo.class);
 
 		DriverManagerDataSource dataSource = new DriverManagerDataSource();
-		dataSource.setDriverClassName("org.postgresql.Driver");
+		dataSource.setDriverClassName(env.getProperty("jdbc.driverClassName"));
 		dataSource.setUrl("jdbc:postgresql://" + dbInfo.getHost() + ":" + dbInfo.getPort() + "/" + dbInfo.getDbname());
 		dataSource.setUsername(dbInfo.getUsername());
 		dataSource.setPassword(dbInfo.getPassword());
