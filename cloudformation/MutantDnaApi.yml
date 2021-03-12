@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Creates all the resources needed by the MutantDna API
+Parameters:
+  ApiName:
+    Type: String
+  BucketS3Name:
+    Type: String
+Mappings:
+  Labs:
+    
+    LambdaUserManagerAPI:
+      Name: "MasivianAuthManagerLambdaUserManagerAPI"
+      Runtime: "dotnetcore3.1"
+      Handler: "UserManager.API::UserManager.API.LambdaEntryPoint::FunctionHandlerAsync"
+
+    ApiGateway:
+      Name: "MasivianAuthManagerApi-Labs"
+      EndpointConfigurationType: "EDGE"
+
+Resources:
+
+  DatabaseStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TimeoutInMinutes: '60'
+      TemplateURL: !Sub "https://${BucketS3Name}.s3.amazonaws.com/cloudformation/components/Database.yml"
+      Parameters:
+        BucketS3Name: !Ref BucketS3Name
+        DBClusterName: MutantDnaDbCluster
+        DBName: MutantDnaDatabase
+        Engine: "aurora-postgresql"
+        EngineMode: "serverless"
+        EngineVersion: "10.12"
+        Min: 2
+        Max: 64
+        EnableHttpEndpoint: True
+        DeletionProtection: False ##Disabled because this API is just for the technical test purposes
+        AdminSecretName: "MutantDnaDatabaseConnectionSecret"
+        UsernameAdmin: "Magneto"
+
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TimeoutInMinutes: '60'
+      TemplateURL: !Sub "https://${BucketS3Name}.s3.amazonaws.com/cloudformation/components/Lambda.yml"
+      Parameters:
+        BucketS3Name: !Ref BucketS3Name
+        LambdaFunctionName: !Sub "${ApiName}Lambda"
+        S3Artifact: "artifacts/Mutant-Dna-1.0-SNAPSHOT-lambda-package.zip"
+        Runtime: "java11"
+        Handler: "org.brotherhood.mutantdna.LambdaHandler::handleRequest"
+        Timeout: 30
+        MemorySize: 512
+        DatabaseSecret: !GetAtt DatabaseStack.Outputs.DatabaseAdminSecretArn
+        
+  ApiGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TimeoutInMinutes: '60'
+      TemplateURL: !Sub "https://${BucketS3Name}.s3.amazonaws.com/cloudformation/components/Apigateway.yml"
+      Parameters:
+        Stage: "dev"
+        ApiName: !Ref ApiName
+        EndpointConfigurationType: "REGIONAL"
+        LambdaApiArn: !GetAtt LambdaStack.Outputs.LambdaApiArn
+  

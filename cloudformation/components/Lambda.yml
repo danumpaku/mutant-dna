@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Lambda Function with the API code
+Parameters:
+  LambdaFunctionName:
+    Type: String
+  BucketS3Name:
+    Type: String
+  S3Artifact:
+    Type: String
+  Runtime:
+    Type: String
+  Handler:
+    Type: String
+  Timeout:
+    Type: Number
+  MemorySize:
+    Type: Number
+  DatabaseSecret:
+    Type: String
+  
+Resources:
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:  !Sub "${LambdaFunctionName}LambdaRole"
+      Description: !Sub "Role for ${LambdaFunctionName}"
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonRDSFullAccess
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+        - arn:aws:iam::aws:policy/AmazonRDSDataFullAccess
+        - arn:aws:iam::aws:policy/AmazonRDSReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  LambdaApi:
+    DependsOn:
+      - LambdaRole
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref LambdaFunctionName
+      Code:
+        S3Bucket: !Ref BucketS3Name
+        S3Key: !Ref S3Artifact
+      Runtime: !Ref Runtime
+      Role: !GetAtt LambdaRole.Arn
+      Handler: !Ref Handler
+      Timeout: !Ref Timeout
+      MemorySize: !Ref MemorySize
+      Environment:
+        Variables:
+          DATABASE_SECRET: !Ref DatabaseSecret
+      Tags:
+        - Key: "Name"
+          Value: !Ref LambdaFunctionName
+Outputs:
+  LambdaApiId:
+    Value: !Ref LambdaApi
+  LambdaApiArn:
+    Value: !GetAtt LambdaApi.Arn
