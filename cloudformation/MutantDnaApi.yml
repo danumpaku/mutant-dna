@@ -36,8 +36,8 @@ Resources:
         Max: 64
         EnableHttpEndpoint: True
         DeletionProtection: False ##Disabled because this API is just for the technical test purposes
-        NameAdminSecret: "MutantDnaDatabaseConnectionSecret"
-        UsernameAdmin: "dbadmin"
+        AdminSecretName: "MutantDnaDatabaseConnectionSecret"
+        UsernameAdmin: "Magneto"
 
   LambdaStack:
     Type: AWS::CloudFormation::Stack
