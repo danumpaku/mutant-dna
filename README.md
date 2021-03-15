@@ -93,5 +93,5 @@ Una vez ha desplegado la API puede ir a la consola de ApiGateway, buscar la API 
 
 # Aclaracion
 En este momento el script de cloud formation no crea las VPC, subredes y grupos de seguridad necesarios para conectar la RDS con la funcion lambda, cosas que se hicieron a mano para la entrega. para probar la API utilice:
-- Endpoint Mutants: https://q5pel6qge3.execute-api.us-east-1.amazonaws.com/Labs/mutants
-- Endpoint Stats: https://q5pel6qge3.execute-api.us-east-1.amazonaws.com/Labs/stats
+- Endpoint Mutants: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/mutant
+- Endpoint Stats: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/stats
