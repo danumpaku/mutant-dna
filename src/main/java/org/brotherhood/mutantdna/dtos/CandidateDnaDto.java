@@ -1,4 +1,4 @@
-package org.brotherhood.mutantdna.entities;
+package org.brotherhood.mutantdna.dtos;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "candidates_dna")
-public class CandidateDna {
+public class CandidateDnaDto {
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

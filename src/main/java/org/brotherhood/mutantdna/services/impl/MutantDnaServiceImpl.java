@@ -3,7 +3,7 @@ package org.brotherhood.mutantdna.services.impl;
 import java.util.Arrays;
 
 import org.brotherhood.mutantdna.dnaanalysis.DnaAnalizer;
-import org.brotherhood.mutantdna.entities.CandidateDna;
+import org.brotherhood.mutantdna.dtos.CandidateDnaDto;
 import org.brotherhood.mutantdna.repositories.CandidateDnaRepository;
 import org.brotherhood.mutantdna.services.MutantDnaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class MutantDnaServiceImpl implements MutantDnaService {
 		int hashCode=Arrays.hashCode(dna);
 		boolean isMutant = new DnaAnalizer(MUTANT_SEQUENCE_LENGTH).isMutant(dna);
 		
-		CandidateDna candidate = new CandidateDna();
+		CandidateDnaDto candidate = new CandidateDnaDto();
 		candidate.setDnaHashCode(hashCode);
 		candidate.setMutant(isMutant);
 		
