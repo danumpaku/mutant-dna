@@ -11,21 +11,21 @@ En donde recibirás como parámetro un array de Strings que representan cada fil
 
 Ejemplo No Mutante
 
-A T G C G A
-C A G T G C
-T T A T T T
-A G A C G G
-G C G T C A
-T C A C T G
+- A T G C G A
+- C A G T G C
+- T T A T T T
+- A G A C G G
+- G C G T C A
+- T C A C T G
 
 Ejemplo Mutante
 
-A T G C G A
-C A G T G C
-T T A T G T
-A G A A G G
-C C C C T A
-T C A C T G
+- A T G C G A
+- C A G T G C
+- T T A T G T
+- A G A A G G
+- C C C C T A
+- T C A C T G
 
 Sabrás si un humano es mutante, si encuentras más de una secuencia de cuatro letras iguales, de forma oblicua, horizontal o vertical.
 Ejemplo (Caso mutante):
@@ -93,5 +93,5 @@ Una vez ha desplegado la API puede ir a la consola de ApiGateway, buscar la API 
 
 # Aclaracion
 En este momento el script de cloud formation no crea las VPC, subredes y grupos de seguridad necesarios para conectar la RDS con la funcion lambda, cosas que se hicieron a mano para la entrega. para probar la API utilice:
-Endpoint Mutants: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/mutants
-Enpoint Stats: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/stats
+- Endpoint Mutants: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/mutant
+- Endpoint Stats: https://cwmcs24spi.execute-api.us-east-1.amazonaws.com/dev/stats
